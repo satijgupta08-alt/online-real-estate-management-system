@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Properties</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .property-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .card p {
+            margin: 8px 0;
+        }
+
+        .available {
+            color: green;
+            font-weight: bold;
+        }
+
+        .not-available {
+            color: red;
+            font-weight: bold;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Online Real Estate Management System</h2>
+    </div>
+
+    <div class="container">
+
+        <h2>All Properties</h2>
+
+        <div id="message">Loading properties...</div>
+
+        <div id="propertyList" class="property-list"></div>
+
+    </div>
+
+    <script>
+
+        async function loadProperties() {
+
+            const message = document.getElementById("message");
+            const propertyList = document.getElementById("propertyList");
+
+            try {
+
+                const response = await fetch("/api/properties");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load properties");
+                }
+
+                const properties = await response.json();
+
+                propertyList.innerHTML = "";
+
+                if (properties.length === 0) {
+
+                    message.innerText = "No properties available.";
+
+                    return;
+                }
+
+                message.innerText = "";
+
+                properties.forEach(property => {
+
+                    const card = document.createElement("div");
+
+                    card.className = "card";
+
+                    card.innerHTML = `
+                        <h3>${property.title}</h3>
+
+                        <p><strong>Address:</strong> ${property.address}</p>
+
+                        <p><strong>City:</strong> ${property.city}</p>
+
+                        <p><strong>Rent:</strong> ₹${property.price}</p>
+
+                        <p><strong>Type:</strong> ${property.propertyType}</p>
+
+                        <p><strong>Description:</strong> ${property.description}</p>
+
+                        <p class="${property.available ? 'available' : 'not-available'}">
+                            ${property.available ? 'Available' : 'Not Available'}
+                        </p>
+                    `;
+
+                    propertyList.appendChild(card);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load properties.";
+
+            }
+
+        }
+
+        loadProperties();
+
+    </script>
+
+</body>
+
+</html>

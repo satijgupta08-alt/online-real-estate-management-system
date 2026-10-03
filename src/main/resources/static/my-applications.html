@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Applications</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .application-list {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(300px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .card p {
+            margin: 10px 0;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 11px 18px;
+            background: #1f4e79;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 25px;
+        }
+
+        .back-button:hover {
+            background: #163a5c;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Tenant - My Applications</h2>
+    </div>
+
+    <div class="container">
+
+        <a
+            href="/tenant-dashboard.html"
+            class="back-button">
+            Back to Dashboard
+        </a>
+
+        <h2>My Rental Applications</h2>
+
+        <div id="message">
+            Loading applications...
+        </div>
+
+        <div
+            id="applicationList"
+            class="application-list">
+        </div>
+
+    </div>
+
+
+    <script>
+
+        async function loadApplications() {
+
+            const message =
+                document.getElementById("message");
+
+            const applicationList =
+                document.getElementById(
+                    "applicationList"
+                );
+
+
+            /*
+             * For now we use the tenant email
+             * entered during application.
+             */
+
+            const tenantEmail =
+                prompt(
+                    "Enter your email to view your applications:"
+                );
+
+
+            if (!tenantEmail) {
+
+                message.innerText =
+                    "Email is required.";
+
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/applications"
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load applications"
+                    );
+                }
+
+
+                const applications =
+                    await response.json();
+
+
+                const myApplications =
+                    applications.filter(
+                        application =>
+                            application.tenantEmail &&
+                            application.tenantEmail.toLowerCase()
+                                === tenantEmail.toLowerCase()
+                    );
+
+
+                applicationList.innerHTML = "";
+
+
+                if (myApplications.length === 0) {
+
+                    message.innerText =
+                        "No applications found for this email.";
+
+                    return;
+                }
+
+
+                message.innerText =
+                    myApplications.length +
+                    " application(s) found.";
+
+
+                myApplications.forEach(
+                    application => {
+
+                        const card =
+                            document.createElement(
+                                "div"
+                            );
+
+                        card.className = "card";
+
+
+                        card.innerHTML = `
+
+                            <h3>
+                                Application #${application.id}
+                            </h3>
+
+                            <p>
+                                <strong>
+                                    Property ID:
+                                </strong>
+                                ${application.propertyId}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Tenant Email:
+                                </strong>
+                                ${application.tenantEmail}
+                            </p>
+
+                            <p>
+                                <strong>
+                                    Status:
+                                </strong>
+
+                                <span class="status">
+                                    ${application.status}
+                                </span>
+                            </p>
+
+                        `;
+
+
+                        applicationList.appendChild(
+                            card
+                        );
+
+                    }
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load applications.";
+            }
+        }
+
+
+        loadApplications();
+
+    </script>
+
+</body>
+</html>

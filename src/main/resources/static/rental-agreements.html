@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Rental Agreements</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-box h2 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 11px 18px;
+            border: none;
+            border-radius: 5px;
+            background: #1f4e79;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #163a5c;
+        }
+
+        .agreement-list {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(300px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .card p {
+            margin: 9px 0;
+        }
+
+        .delete-button {
+            background: #c0392b;
+        }
+
+        .delete-button:hover {
+            background: #922b21;
+        }
+
+        .edit-button {
+            background: #27ae60;
+        }
+
+        .edit-button:hover {
+            background: #1e8449;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Rental Agreement Management</h2>
+    </div>
+
+    <div class="container">
+
+        <!-- CREATE AGREEMENT -->
+
+        <div class="form-box">
+
+            <h2>Create Rental Agreement</h2>
+
+            <div class="form-group">
+                <label>Property ID</label>
+
+                <input
+                    type="number"
+                    id="propertyId"
+                    placeholder="Enter property ID"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Tenant Email</label>
+
+                <input
+                    type="email"
+                    id="tenantEmail"
+                    placeholder="Enter tenant email"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Start Date</label>
+
+                <input
+                    type="date"
+                    id="startDate"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>End Date</label>
+
+                <input
+                    type="date"
+                    id="endDate"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Monthly Rent</label>
+
+                <input
+                    type="number"
+                    id="monthlyRent"
+                    placeholder="Enter monthly rent"
+                >
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+
+                <select id="status">
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="EXPIRED">EXPIRED</option>
+                </select>
+            </div>
+
+            <button onclick="createAgreement()">
+                Create Agreement
+            </button>
+
+        </div>
+
+
+        <!-- AGREEMENT LIST -->
+
+        <h2>All Rental Agreements</h2>
+
+        <div id="message">
+            Loading agreements...
+        </div>
+
+        <div
+            id="agreementList"
+            class="agreement-list">
+        </div>
+
+    </div>
+
+
+    <script>
+
+        async function loadAgreements() {
+
+            const message =
+                document.getElementById("message");
+
+            const agreementList =
+                document.getElementById("agreementList");
+
+            try {
+
+                const response =
+                    await fetch("/api/agreements");
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load agreements"
+                    );
+                }
+
+                const agreements =
+                    await response.json();
+
+                agreementList.innerHTML = "";
+
+                if (agreements.length === 0) {
+
+                    message.innerText =
+                        "No rental agreements found.";
+
+                    return;
+                }
+
+                message.innerText =
+                    agreements.length +
+                    " rental agreement(s) found.";
+
+                agreements.forEach(agreement => {
+
+                    const card =
+                        document.createElement("div");
+
+                    card.className = "card";
+
+                    card.innerHTML = `
+
+                        <h3>
+                            Agreement #${agreement.id}
+                        </h3>
+
+                        <p>
+                            <strong>Property ID:</strong>
+                            ${agreement.propertyId}
+                        </p>
+
+                        <p>
+                            <strong>Tenant Email:</strong>
+                            ${agreement.tenantEmail}
+                        </p>
+
+                        <p>
+                            <strong>Start Date:</strong>
+                            ${agreement.startDate}
+                        </p>
+
+                        <p>
+                            <strong>End Date:</strong>
+                            ${agreement.endDate}
+                        </p>
+
+                        <p>
+                            <strong>Monthly Rent:</strong>
+                            ₹${agreement.monthlyRent}
+                        </p>
+
+                        <p>
+                            <strong>Status:</strong>
+                            ${agreement.status}
+                        </p>
+
+                        <button
+                            class="edit-button"
+                            onclick="editAgreement(${agreement.id})">
+                            Edit
+                        </button>
+
+                        <button
+                            class="delete-button"
+                            onclick="deleteAgreement(${agreement.id})">
+                            Delete
+                        </button>
+                    `;
+
+                    agreementList.appendChild(card);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load rental agreements.";
+            }
+        }
+
+
+        async function createAgreement() {
+
+            const propertyId =
+                document.getElementById("propertyId").value;
+
+            const tenantEmail =
+                document.getElementById("tenantEmail").value;
+
+            const startDate =
+                document.getElementById("startDate").value;
+
+            const endDate =
+                document.getElementById("endDate").value;
+
+            const monthlyRent =
+                document.getElementById("monthlyRent").value;
+
+            const status =
+                document.getElementById("status").value;
+
+
+            if (
+                !propertyId ||
+                !tenantEmail ||
+                !startDate ||
+                !endDate ||
+                !monthlyRent
+            ) {
+
+                alert(
+                    "Please fill all required fields."
+                );
+
+                return;
+            }
+
+
+            const agreement = {
+
+                propertyId:
+                    Number(propertyId),
+
+                tenantEmail:
+                    tenantEmail,
+
+                startDate:
+                    startDate,
+
+                endDate:
+                    endDate,
+
+                monthlyRent:
+                    Number(monthlyRent),
+
+                status:
+                    status
+            };
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/agreements",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(agreement)
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to create agreement"
+                    );
+                }
+
+
+                alert(
+                    "Rental agreement created successfully!"
+                );
+
+
+                document.getElementById(
+                    "propertyId"
+                ).value = "";
+
+                document.getElementById(
+                    "tenantEmail"
+                ).value = "";
+
+                document.getElementById(
+                    "startDate"
+                ).value = "";
+
+                document.getElementById(
+                    "endDate"
+                ).value = "";
+
+                document.getElementById(
+                    "monthlyRent"
+                ).value = "";
+
+
+                loadAgreements();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to create rental agreement."
+                );
+            }
+        }
+
+
+        async function deleteAgreement(id) {
+
+            const confirmDelete =
+                confirm(
+                    "Are you sure you want to delete this agreement?"
+                );
+
+            if (!confirmDelete) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/agreements/" + id,
+                        {
+                            method: "DELETE"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to delete agreement"
+                    );
+                }
+
+
+                alert(
+                    "Rental agreement deleted successfully!"
+                );
+
+
+                loadAgreements();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to delete agreement."
+                );
+            }
+        }
+
+
+        async function editAgreement(id) {
+
+            const tenantEmail =
+                prompt(
+                    "Enter new tenant email:"
+                );
+
+            if (!tenantEmail) {
+                return;
+            }
+
+
+            const monthlyRent =
+                prompt(
+                    "Enter new monthly rent:"
+                );
+
+            if (!monthlyRent) {
+                return;
+            }
+
+
+            const agreement = {
+
+                tenantEmail:
+                    tenantEmail,
+
+                monthlyRent:
+                    Number(monthlyRent)
+            };
+
+
+            try {
+
+                /*
+                 * First get the existing agreement
+                 */
+
+                const getResponse =
+                    await fetch(
+                        "/api/agreements/" + id
+                    );
+
+
+                if (!getResponse.ok) {
+
+                    throw new Error(
+                        "Agreement not found"
+                    );
+                }
+
+
+                const existingAgreement =
+                    await getResponse.json();
+
+
+                /*
+                 * Keep existing values
+                 * and change only email/rent.
+                 */
+
+                existingAgreement.tenantEmail =
+                    tenantEmail;
+
+                existingAgreement.monthlyRent =
+                    Number(monthlyRent);
+
+
+                const response =
+                    await fetch(
+                        "/api/agreements/" + id,
+                        {
+                            method: "PUT",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    existingAgreement
+                                )
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to update agreement"
+                    );
+                }
+
+
+                alert(
+                    "Rental agreement updated successfully!"
+                );
+
+
+                loadAgreements();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to update agreement."
+                );
+            }
+        }
+
+
+        loadAgreements();
+
+    </script>
+
+</body>
+</html>

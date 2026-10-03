@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Agreements</title>
+
+```
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        margin: 0;
+        background: #f5f7fa;
+    }
+
+    .navbar {
+        background: #1f4e79;
+        color: white;
+        padding: 18px 30px;
+    }
+
+    .navbar h2 {
+        margin: 0;
+    }
+
+    .container {
+        width: 90%;
+        max-width: 1100px;
+        margin: 30px auto;
+    }
+
+    .back-button {
+        display: inline-block;
+        padding: 11px 18px;
+        background: #1f4e79;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 25px;
+    }
+
+    .back-button:hover {
+        background: #163a5c;
+    }
+
+    .agreement-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+        color: #1f4e79;
+        margin-top: 0;
+    }
+
+    .card p {
+        margin: 10px 0;
+    }
+
+    .status {
+        font-weight: bold;
+    }
+
+    #message {
+        text-align: center;
+        margin: 20px;
+        font-weight: bold;
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+```
+<div class="navbar">
+    <h2>Tenant - My Agreements</h2>
+</div>
+
+<div class="container">
+
+    <a href="/tenant-dashboard.html" class="back-button">
+        Back to Dashboard
+    </a>
+
+    <h2>My Rental Agreements</h2>
+
+    <div id="message">
+        Loading agreements...
+    </div>
+
+    <div id="agreementList" class="agreement-list"></div>
+
+</div>
+
+<script>
+
+    async function loadAgreements() {
+
+        const message = document.getElementById("message");
+        const agreementList =
+            document.getElementById("agreementList");
+
+        const tenantEmail = prompt(
+            "Enter your email to view your agreements:"
+        );
+
+        if (!tenantEmail) {
+            message.innerText = "Email is required.";
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch("/api/agreements");
+
+            if (!response.ok) {
+                throw new Error("Failed to load agreements");
+            }
+
+            const agreements =
+                await response.json();
+
+            const myAgreements =
+                agreements.filter(
+                    agreement =>
+                        agreement.tenantEmail &&
+                        agreement.tenantEmail.toLowerCase()
+                        === tenantEmail.toLowerCase()
+                );
+
+            agreementList.innerHTML = "";
+
+            if (myAgreements.length === 0) {
+
+                message.innerText =
+                    "No rental agreements found for this email.";
+
+                return;
+            }
+
+            message.innerText =
+                myAgreements.length +
+                " rental agreement(s) found.";
+
+            myAgreements.forEach(agreement => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className = "card";
+
+                card.innerHTML = `
+                    <h3>Agreement #${agreement.id}</h3>
+
+                    <p>
+                        <strong>Property ID:</strong>
+                        ${agreement.propertyId}
+                    </p>
+
+                    <p>
+                        <strong>Tenant Email:</strong>
+                        ${agreement.tenantEmail}
+                    </p>
+
+                    <p>
+                        <strong>Start Date:</strong>
+                        ${agreement.startDate}
+                    </p>
+
+                    <p>
+                        <strong>End Date:</strong>
+                        ${agreement.endDate}
+                    </p>
+
+                    <p>
+                        <strong>Monthly Rent:</strong>
+                        ₹${agreement.monthlyRent}
+                    </p>
+
+                    <p>
+                        <strong>Status:</strong>
+                        <span class="status">
+                            ${agreement.status}
+                        </span>
+                    </p>
+                `;
+
+                agreementList.appendChild(card);
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            message.innerText =
+                "Unable to load rental agreements.";
+        }
+    }
+
+    loadAgreements();
+
+</script>
+```
+
+</body>
+</html>

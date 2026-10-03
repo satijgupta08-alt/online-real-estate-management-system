@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(220px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .section {
+            margin-top: 35px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 20px;
+            background: #1f4e79;
+            color: white;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            background: #163a5c;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Admin Dashboard</h2>
+    </div>
+
+    <div class="container">
+
+        <h1>Welcome Admin</h1>
+
+        <div id="message">
+            Loading dashboard...
+        </div>
+
+        <div class="cards">
+
+            <div class="card">
+                <h3>Total Users</h3>
+                <p id="totalUsers">0</p>
+            </div>
+
+
+            <div class="card">
+                <h3>Total Properties</h3>
+                <p id="totalProperties">0</p>
+            </div>
+
+
+            <a href="/applications.html">
+
+                <div class="card">
+                    <h3>Total Applications</h3>
+                    <p id="totalApplications">0</p>
+                </div>
+
+            </a>
+
+
+            <a href="/rental-agreements.html">
+
+                <div class="card">
+                    <h3>Total Agreements</h3>
+                    <p id="totalAgreements">0</p>
+                </div>
+
+            </a>
+
+        </div>
+
+
+        <div class="section">
+
+            <h2>Admin Actions</h2>
+
+            <a
+                href="/applications.html"
+                class="button">
+                Manage Applications
+            </a>
+
+
+            <a
+                href="/properties.html"
+                class="button">
+                Manage Properties
+            </a>
+
+
+            <a
+                href="/rental-agreements.html"
+                class="button">
+                Manage Agreements
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        async function loadDashboard() {
+
+            const message =
+                document.getElementById("message");
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/admin/dashboard"
+                    );
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to load dashboard"
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                document.getElementById(
+                    "totalUsers"
+                ).innerText =
+                    data.totalUsers;
+
+
+                document.getElementById(
+                    "totalProperties"
+                ).innerText =
+                    data.totalProperties;
+
+
+                document.getElementById(
+                    "totalApplications"
+                ).innerText =
+                    data.totalApplications;
+
+
+                document.getElementById(
+                    "totalAgreements"
+                ).innerText =
+                    data.totalAgreements;
+
+
+                message.innerText = "";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load dashboard data.";
+            }
+        }
+
+
+        loadDashboard();
+
+    </script>
+
+</body>
+</html>

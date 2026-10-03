@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Applications</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .application-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .card p {
+            margin: 10px 0;
+        }
+
+        .status {
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 11px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 5px;
+            background: #1f4e79;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #163a5c;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Admin - Manage Applications</h2>
+    </div>
+
+    <div class="container">
+
+        <h2>Rental Applications</h2>
+
+        <div id="message">
+            Loading applications...
+        </div>
+
+        <div id="applicationList" class="application-list"></div>
+
+    </div>
+
+
+    <script>
+
+        async function loadApplications() {
+
+            const message =
+                document.getElementById("message");
+
+            const applicationList =
+                document.getElementById("applicationList");
+
+            try {
+
+                const response =
+                    await fetch("/api/applications");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load applications");
+                }
+
+                const applications =
+                    await response.json();
+
+                applicationList.innerHTML = "";
+
+                if (applications.length === 0) {
+
+                    message.innerText =
+                        "No applications found.";
+
+                    return;
+                }
+
+                message.innerText =
+                    applications.length +
+                    " application(s) found.";
+
+
+                applications.forEach(application => {
+
+                    const card =
+                        document.createElement("div");
+
+                    card.className = "card";
+
+                    card.innerHTML = `
+
+                        <h3>
+                            Application #${application.id}
+                        </h3>
+
+                        <p>
+                            <strong>Property ID:</strong>
+                            ${application.propertyId}
+                        </p>
+
+                        <p>
+                            <strong>Tenant Email:</strong>
+                            ${application.tenantEmail || "Not provided"}
+                        </p>
+
+                        <p>
+                            <strong>Current Status:</strong>
+                            <span class="status">
+                                ${application.status}
+                            </span>
+                        </p>
+
+                        <label>
+                            <strong>Change Status:</strong>
+                        </label>
+
+                        <select id="status-${application.id}">
+
+                            <option value="PENDING"
+                                ${application.status === "PENDING"
+                                    ? "selected"
+                                    : ""}>
+                                PENDING
+                            </option>
+
+                            <option value="APPROVED"
+                                ${application.status === "APPROVED"
+                                    ? "selected"
+                                    : ""}>
+                                APPROVED
+                            </option>
+
+                            <option value="REJECTED"
+                                ${application.status === "REJECTED"
+                                    ? "selected"
+                                    : ""}>
+                                REJECTED
+                            </option>
+
+                        </select>
+
+                        <button
+                            onclick="updateStatus(${application.id})">
+                            Update Status
+                        </button>
+                    `;
+
+                    applicationList.appendChild(card);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load applications.";
+
+            }
+
+        }
+
+
+        async function updateStatus(applicationId) {
+
+            const select =
+                document.getElementById(
+                    "status-" + applicationId
+                );
+
+            const status = select.value;
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/applications/"
+                        + applicationId
+                        + "/status?status="
+                        + encodeURIComponent(status),
+                        {
+                            method: "PUT"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Failed to update status"
+                    );
+
+                }
+
+
+                alert(
+                    "Application status updated successfully!"
+                );
+
+                loadApplications();
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to update application status."
+                );
+
+            }
+
+        }
+
+
+        loadApplications();
+
+    </script>
+
+</body>
+
+</html>

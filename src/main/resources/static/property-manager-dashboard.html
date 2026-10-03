@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Property Manager Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(220px, 1fr)
+            );
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-bottom: 15px;
+        }
+
+        .card p {
+            font-size: 30px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .section {
+            margin-top: 35px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .section h2 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 20px;
+            background: #1f4e79;
+            color: white;
+            border-radius: 5px;
+            margin-right: 10px;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+
+        .button:hover {
+            background: #163a5c;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Property Manager Dashboard</h2>
+    </div>
+
+    <div class="container">
+
+        <h1>Welcome Property Manager</h1>
+
+        <div id="message">
+            Loading dashboard...
+        </div>
+
+        <div class="cards">
+
+            <div class="card">
+                <h3>Total Properties</h3>
+                <p id="totalProperties">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Total Applications</h3>
+                <p id="totalApplications">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Total Agreements</h3>
+                <p id="totalAgreements">0</p>
+            </div>
+
+        </div>
+
+
+        <div class="section">
+
+            <h2>Property Management</h2>
+
+            <a
+                href="/add-property.html"
+                class="button">
+                Add Property
+            </a>
+
+            <a
+                href="/properties.html"
+                class="button">
+                Manage Properties
+            </a>
+
+            <a
+                href="/applications.html"
+                class="button">
+                Manage Applications
+            </a>
+
+            <a
+                href="/rental-agreements.html"
+                class="button">
+                Manage Agreements
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        async function loadDashboard() {
+
+            const message =
+                document.getElementById("message");
+
+            try {
+
+                const propertyResponse =
+                    await fetch("/api/properties");
+
+                const applicationResponse =
+                    await fetch("/api/applications");
+
+                const agreementResponse =
+                    await fetch("/api/agreements");
+
+
+                if (
+                    !propertyResponse.ok ||
+                    !applicationResponse.ok ||
+                    !agreementResponse.ok
+                ) {
+
+                    throw new Error(
+                        "Failed to load dashboard"
+                    );
+                }
+
+
+                const properties =
+                    await propertyResponse.json();
+
+                const applications =
+                    await applicationResponse.json();
+
+                const agreements =
+                    await agreementResponse.json();
+
+
+                document.getElementById(
+                    "totalProperties"
+                ).innerText =
+                    properties.length;
+
+
+                document.getElementById(
+                    "totalApplications"
+                ).innerText =
+                    applications.length;
+
+
+                document.getElementById(
+                    "totalAgreements"
+                ).innerText =
+                    agreements.length;
+
+
+                message.innerText = "";
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load dashboard data.";
+            }
+        }
+
+
+        loadDashboard();
+
+    </script>
+
+</body>
+</html>

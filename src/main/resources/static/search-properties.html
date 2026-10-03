@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Search Properties</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1f4e79;
+            color: white;
+            padding: 18px 30px;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .search-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .search-box h2 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        input {
+            width: 70%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #1f4e79;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+            margin-left: 5px;
+        }
+
+        button:hover {
+            background: #163a5c;
+        }
+
+        .property-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #1f4e79;
+            margin-top: 0;
+        }
+
+        .card p {
+            margin: 8px 0;
+        }
+
+        .apply-button {
+            width: 100%;
+            margin: 15px 0 0 0;
+        }
+
+        .unavailable {
+            color: red;
+            font-weight: bold;
+        }
+
+        .available {
+            color: green;
+            font-weight: bold;
+        }
+
+        #message {
+            text-align: center;
+            margin: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h2>Tenant - Search Properties</h2>
+    </div>
+
+    <div class="container">
+
+        <div class="search-box">
+
+            <h2>Search Property by City</h2>
+
+            <input
+                type="text"
+                id="city"
+                placeholder="Enter city name"
+            >
+
+            <button onclick="searchProperties()">
+                Search
+            </button>
+
+            <button onclick="loadAllProperties()">
+                Show All
+            </button>
+
+        </div>
+
+        <div id="message">
+            Loading properties...
+        </div>
+
+        <div id="propertyList" class="property-list"></div>
+
+    </div>
+
+    <script>
+
+        async function loadAllProperties() {
+
+            const message = document.getElementById("message");
+            const propertyList = document.getElementById("propertyList");
+
+            try {
+
+                const response =
+                    await fetch("/api/properties");
+
+                if (!response.ok) {
+                    throw new Error("Failed to load properties");
+                }
+
+                const properties =
+                    await response.json();
+
+                displayProperties(properties);
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to load properties.";
+
+            }
+        }
+
+
+        async function searchProperties() {
+
+            const city =
+                document.getElementById("city").value.trim();
+
+            if (city === "") {
+
+                alert("Please enter a city name.");
+
+                return;
+            }
+
+            const message =
+                document.getElementById("message");
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/properties/search?city=" +
+                        encodeURIComponent(city)
+                    );
+
+                if (!response.ok) {
+                    throw new Error("Search failed");
+                }
+
+                const properties =
+                    await response.json();
+
+                displayProperties(properties);
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.innerText =
+                    "Unable to search properties.";
+
+            }
+        }
+
+
+        function displayProperties(properties) {
+
+            const message =
+                document.getElementById("message");
+
+            const propertyList =
+                document.getElementById("propertyList");
+
+            propertyList.innerHTML = "";
+
+            if (properties.length === 0) {
+
+                message.innerText =
+                    "No properties found.";
+
+                return;
+            }
+
+            message.innerText =
+                properties.length +
+                " property/properties found.";
+
+            properties.forEach(property => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className = "card";
+
+                let availabilityHTML = "";
+
+                if (property.available) {
+
+                    availabilityHTML = `
+                        <p class="available">
+                            Available
+                        </p>
+
+                        <button
+                            class="apply-button"
+                            onclick="applyForProperty(${property.id})">
+                            Apply for Property
+                        </button>
+                    `;
+
+                } else {
+
+                    availabilityHTML = `
+                        <p class="unavailable">
+                            Not Available
+                        </p>
+                    `;
+                }
+
+                card.innerHTML = `
+
+                    <h3>${property.title}</h3>
+
+                    <p>
+                        <strong>Property ID:</strong>
+                        ${property.id}
+                    </p>
+
+                    <p>
+                        <strong>Address:</strong>
+                        ${property.address}
+                    </p>
+
+                    <p>
+                        <strong>City:</strong>
+                        ${property.city}
+                    </p>
+
+                    <p>
+                        <strong>Price:</strong>
+                        ₹${property.price}
+                    </p>
+
+                    <p>
+                        <strong>Type:</strong>
+                        ${property.propertyType}
+                    </p>
+
+                    <p>
+                        <strong>Description:</strong>
+                        ${property.description}
+                    </p>
+
+                    ${availabilityHTML}
+
+                `;
+
+                propertyList.appendChild(card);
+
+            });
+        }
+
+
+        async function applyForProperty(propertyId) {
+
+            /*
+             * Tenant email is required for the application.
+             */
+
+            const tenantEmail =
+                prompt("Enter your email address:");
+
+            if (!tenantEmail) {
+
+                alert("Email is required to apply.");
+
+                return;
+            }
+
+
+            const application = {
+
+                propertyId: propertyId,
+
+                tenantEmail: tenantEmail,
+
+                status: "PENDING"
+
+            };
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/applications",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(application)
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Application submission failed"
+                    );
+
+                }
+
+
+                const result =
+                    await response.json();
+
+
+                alert(
+                    "Application submitted successfully!"
+                );
+
+
+                console.log(
+                    "Application:",
+                    result
+                );
+
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert(
+                    "Unable to submit application."
+                );
+
+            }
+
+        }
+
+
+        loadAllProperties();
+
+    </script>
+
+</body>
+</html>

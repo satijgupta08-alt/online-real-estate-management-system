@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Transactions</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: #1e293b;
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        h1, h2 {
+            color: #1e293b;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #1e293b;
+            color: white;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        @media (max-width: 700px) {
+            table {
+                font-size: 12px;
+            }
+
+            .container {
+                margin: 20px auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <h2>Real Estate Management</h2>
+
+    <div>
+        <a href="/tenant-dashboard.html">Dashboard</a>
+        <a href="/properties.html">Properties</a>
+        <a href="/rental-agreements.html">Agreements</a>
+    </div>
+
+</div>
+
+
+<div class="container">
+
+    <h1>💳 Rent Payment & Transactions</h1>
+
+
+    <!-- Payment Form -->
+
+    <div class="card">
+
+        <h2>Make Rent Payment</h2>
+
+        <label>Property ID</label>
+
+        <input
+            type="number"
+            id="propertyId"
+            placeholder="Enter Property ID"
+        >
+
+
+        <label>Agreement ID</label>
+
+        <input
+            type="number"
+            id="agreementId"
+            placeholder="Enter Agreement ID"
+        >
+
+
+        <label>Rent Amount</label>
+
+        <input
+            type="number"
+            id="amount"
+            placeholder="Enter rent amount"
+        >
+
+
+        <label>Payment Method</label>
+
+        <select id="paymentMethod">
+
+            <option value="UPI">
+                UPI
+            </option>
+
+            <option value="CARD">
+                Credit/Debit Card
+            </option>
+
+            <option value="NET_BANKING">
+                Net Banking
+            </option>
+
+        </select>
+
+
+        <button onclick="makePayment()">
+            Pay Rent
+        </button>
+
+
+        <p id="message"></p>
+
+    </div>
+
+
+    <!-- Transaction History -->
+
+    <div class="card">
+
+        <h2>My Transaction History</h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Transaction ID</th>
+                    <th>Property ID</th>
+                    <th>Agreement ID</th>
+                    <th>Amount</th>
+                    <th>Payment Method</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="transactionTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // Get logged-in user's email
+    const tenantEmail =
+        localStorage.getItem("userEmail");
+
+
+    // Check login
+    if (!tenantEmail) {
+
+        alert("Please login first.");
+
+        window.location.href = "/login.html";
+    }
+
+
+    // Make payment
+    async function makePayment() {
+
+        const propertyId =
+            document.getElementById("propertyId").value;
+
+        const agreementId =
+            document.getElementById("agreementId").value;
+
+        const amount =
+            document.getElementById("amount").value;
+
+        const paymentMethod =
+            document.getElementById("paymentMethod").value;
+
+        const message =
+            document.getElementById("message");
+
+
+        // Validate fields
+        if (!propertyId || !agreementId || !amount) {
+
+            message.innerText =
+                "Please fill all required fields.";
+
+            message.className = "error";
+
+            return;
+        }
+
+
+        const transaction = {
+
+            propertyId: Number(propertyId),
+
+            agreementId: Number(agreementId),
+
+            tenantEmail: tenantEmail,
+
+            amount: Number(amount),
+
+            paymentMethod: paymentMethod
+        };
+
+
+        try {
+
+            const response = await fetch(
+                "/api/transactions",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(transaction)
+                }
+            );
+
+
+            // Get server response
+            const responseText =
+                await response.text();
+
+
+            if (!response.ok) {
+
+                console.error(
+                    "Server error:",
+                    responseText
+                );
+
+                message.innerText =
+                    "Payment failed. Server error.";
+
+                message.className = "error";
+
+                return;
+            }
+
+
+            const data =
+                JSON.parse(responseText);
+
+
+            message.innerText =
+                "Payment successful! Transaction ID: "
+                + data.transactionId;
+
+            message.className = "success";
+
+
+            // Clear form
+            document.getElementById(
+                "propertyId"
+            ).value = "";
+
+            document.getElementById(
+                "agreementId"
+            ).value = "";
+
+            document.getElementById(
+                "amount"
+            ).value = "";
+
+
+            // Reload transactions
+            loadTransactions();
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Payment error:",
+                error
+            );
+
+            message.innerText =
+                "Payment failed. Please try again.";
+
+            message.className = "error";
+        }
+    }
+
+
+    // Load transaction history
+    async function loadTransactions() {
+
+        try {
+
+            const response = await fetch(
+                "/api/transactions/tenant/"
+                + encodeURIComponent(tenantEmail)
+            );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Failed to load transactions"
+                );
+            }
+
+
+            const transactions =
+                await response.json();
+
+
+            const table =
+                document.getElementById(
+                    "transactionTable"
+                );
+
+
+            table.innerHTML = "";
+
+
+            if (transactions.length === 0) {
+
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="8">
+                            No transactions found.
+                        </td>
+                    </tr>
+                `;
+
+                return;
+            }
+
+
+            transactions.forEach(
+                transaction => {
+
+                    const row =
+                        document.createElement("tr");
+
+
+                    row.innerHTML = `
+
+                        <td>
+                            ${transaction.id}
+                        </td>
+
+                        <td>
+                            ${transaction.transactionId}
+                        </td>
+
+                        <td>
+                            ${transaction.propertyId}
+                        </td>
+
+                        <td>
+                            ${transaction.agreementId}
+                        </td>
+
+                        <td>
+                            ₹${transaction.amount}
+                        </td>
+
+                        <td>
+                            ${transaction.paymentMethod}
+                        </td>
+
+                        <td class="success">
+                            ${transaction.status}
+                        </td>
+
+                        <td>
+                            ${transaction.transactionDate}
+                        </td>
+
+                    `;
+
+
+                    table.appendChild(row);
+
+                }
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Error loading transactions:",
+                error
+            );
+
+        }
+    }
+
+
+    // Load transactions when page opens
+    loadTransactions();
+
+</script>
+
+</body>
+</html>
